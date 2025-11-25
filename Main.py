@@ -34,4 +34,6 @@ print("Best starting city by greedy algorithm  BERLIN52:", best_city, "fitness:"
 best_route_fitness, dict_of_routes_fitness = Algorithms.random_routes_analysis(coordinates_berlin_52, 100)
 Algorithms.info(best_route_fitness)
 
-print("------------------------TASK11------------------------------------")
+print("------------------------TASK12------------------------------------")
+Algorithms.info(Algorithms.population_task12(coordinates_berlin_11,5,11))
+
