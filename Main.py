@@ -35,5 +35,8 @@ best_route_fitness, dict_of_routes_fitness = Algorithms.random_routes_analysis(c
 Algorithms.info(best_route_fitness)
 
 print("------------------------TASK12------------------------------------")
-Algorithms.info(Algorithms.population_task12(coordinates_berlin_11,5,11))
+population_task12 = Algorithms.population_task12(coordinates_berlin_11,5,11)
+Algorithms.info(population_task12)
 
+print("------------------------TASK13------------------------------------")
+Algorithms.info_task13(population_task12)

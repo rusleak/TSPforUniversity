@@ -1,5 +1,6 @@
 import random
 from random import sample
+from xmlrpc.client import MAXINT
 
 
 class Algorithms:
@@ -126,5 +127,24 @@ class Algorithms:
 
         return result
 
+    @staticmethod
+    def info_task13(population):
+        print("Population size:", len(population))
 
+        best_result = None
+        worst_result = None
+
+        for route in population:
+            fitness = Algorithms.calculate_fitness(route)
+
+            if best_result is None or fitness < list(best_result.values())[0]:
+                best_result = {tuple(route): fitness}
+            if worst_result is None or fitness > list(worst_result.values())[0]:
+                worst_result = {tuple(route): fitness}
+
+        print("Best route:")
+        Algorithms.info(best_result)
+
+        print("Worst route:")
+        Algorithms.info(worst_result)
 
