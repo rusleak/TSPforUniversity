@@ -40,3 +40,8 @@ Algorithms.info(population_task12)
 
 print("------------------------TASK13------------------------------------")
 Algorithms.info_task13(population_task12)
+
+print("------------------------TASK14------------------------------------")
+tournament_route, tournament_fitness = Algorithms.tournament_task14(Algorithms.convert_dict_to_list(population_task12), 5)
+#Converting to list because info function accept list or dict
+Algorithms.info({tournament_route: tournament_fitness})

@@ -148,3 +148,29 @@ class Algorithms:
         print("Worst route:")
         Algorithms.info(worst_result)
 
+    #Tournament selection : n stands for how much randomly chosen cities will take part in tournament
+    #Takes list of population not dict
+    @staticmethod
+    def tournament_task14(population, n):
+        randomly_chosen_routes = []
+
+        winner = None
+        best_fitness = float('inf')
+
+        left_routes = population.copy()
+        for _ in range( n+1 ):
+            route = random.choice(left_routes)
+            left_routes.remove(route)
+            randomly_chosen_routes.append(route)
+
+        for route in randomly_chosen_routes:
+            curr_fitness = Algorithms.calculate_fitness(route)
+            if curr_fitness < best_fitness:
+                winner = route
+                best_fitness = curr_fitness
+
+        return winner, best_fitness
+
+    @staticmethod
+    def convert_dict_to_list(routes_fitness):
+        return list(routes_fitness.keys())
