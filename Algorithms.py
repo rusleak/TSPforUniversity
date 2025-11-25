@@ -1,4 +1,5 @@
 import random
+from random import sample
 
 
 class Algorithms:
@@ -102,3 +103,26 @@ class Algorithms:
         solution = cities.copy()
         random.shuffle(solution)
         return solution
+
+    @staticmethod
+    def population_task12(initial_data, population_sol, greedy_sol):
+        if (population_sol < 1 and greedy_sol < 1) or (population_sol < 1):
+            raise ValueError("Population size must be greater than or equal to 1")
+
+        result = {}
+
+        for _ in range(greedy_sol):
+            rand = random.randint(0, len(initial_data) - 1)
+            city_to_start = initial_data[rand]
+            curr = Algorithms.greedy_algorithm(initial_data, city_to_start)
+            result.update(curr)
+
+        for _ in range(population_sol):
+            curr = Algorithms.generate_random_route(initial_data)
+            fitness = Algorithms.calculate_fitness(curr)
+            result[tuple(curr)] = fitness
+
+        return result
+
+
+
