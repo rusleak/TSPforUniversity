@@ -35,7 +35,7 @@ best_route_fitness, dict_of_routes_fitness = Algorithms.random_routes_analysis(c
 Algorithms.info(best_route_fitness)
 
 print("------------------------TASK12------------------------------------")
-population_task12 = Algorithms.population_task12(coordinates_berlin_11,5,11)
+population_task12 = Algorithms.population_task12(coordinates_berlin_11,30,11)
 Algorithms.info(population_task12)
 
 print("------------------------TASK13------------------------------------")
@@ -63,3 +63,10 @@ Algorithms.info({tuple(crossover_route): Algorithms.calculate_fitness(crossover_
 
 print("------------------------TASK16------------------------------------")
 Algorithms.swap_mutation(crossover_route, 0.2)
+
+print("------------------------TASK17------------------------------------")
+
+population_list = Algorithms.convert_dict_to_list(population_task12)
+print([len(r) for r in population_list])
+population_list = [list(r) for r in Algorithms.convert_dict_to_list(population_task12)]
+epoch, best_three = Algorithms.epoch(population_list, 100)

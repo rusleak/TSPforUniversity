@@ -229,6 +229,45 @@ class Algorithms:
         Algorithms.info({tuple(child): Algorithms.calculate_fitness(child)})
         return child
 
+    @staticmethod
+    def epoch(initial_population, size):
+        result = []
+        best_three_solutions = []
+
+        #-----------Selecting parents---------
+        while len(result) != size:
+            parent1, _ = Algorithms.tournament_task14(initial_population, 5)
+            parent2, _ = Algorithms.tournament_task14(initial_population, 5)
+            while parent1 == parent2:
+                parent2 = Algorithms.tournament_task14(initial_population, 5)
+                parent2 = list(parent2)
+        #-----------Crossover---------
+            parent1 = list(parent1)
+            parent2 = list(parent2)
+
+            child = Algorithms.PMX_alg(parent1, parent2)
+
+        #-----------Mutation---------
+            child = Algorithms.swap_mutation(child,0.2)
+            child_fitness = Algorithms.calculate_fitness(child)
+        # -----------Creating population / best_solutions---------
+            result.append({tuple(child): child_fitness})
+
+            if len(best_three_solutions) < 3:
+                best_three_solutions.append({tuple(child): child_fitness})
+            else:
+                worst_route = None
+                worst_fitness = -1
+
+                # finding the worst element
+                for elem in best_three_solutions:  # elem = {route_tuple : fitness}
+                    for key, value in elem.items():  # key = route_tuple, value = fitness
+                        if value > worst_fitness:
+                            worst_fitness = value
+                            worst_route = elem  # tuple here
 
 
-
+                if child_fitness < worst_fitness:
+                    best_three_solutions.remove(worst_route)
+                    best_three_solutions.append({tuple(child): child_fitness})
+        return result, best_three_solutions
