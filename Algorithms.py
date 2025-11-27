@@ -208,6 +208,26 @@ class Algorithms:
         return child
 
 
+    @staticmethod
+    def swap_mutation(route, mutation_rate=0.2):
+        child = route.copy()
+        print("Original route:")
+        Algorithms.info({tuple(route): Algorithms.calculate_fitness(route)})
+        size = len(child)
+
+        for i in range(size):
+            r = random.random()
+            print(f"City {child[i]} | random={r:.2f}", end=" -> ")
+            if r < mutation_rate:
+                j = random.randint(0, size - 1)
+                print(f"swapped with {child[j]}")
+                child[i], child[j] = child[j], child[i]
+            else:
+                print("no change")
+
+        print("Mutated route:")
+        Algorithms.info({tuple(child): Algorithms.calculate_fitness(child)})
+        return child
 
 
 

@@ -60,3 +60,6 @@ Algorithms.info({tournament_route2: tournament_fitness2})
 print("------------------------TASK15------------------------------------")
 crossover_route = Algorithms.PMX_alg(tournament_route1,tournament_route2)
 Algorithms.info({tuple(crossover_route): Algorithms.calculate_fitness(crossover_route)})
+
+print("------------------------TASK16------------------------------------")
+Algorithms.swap_mutation(crossover_route, 0.2)
