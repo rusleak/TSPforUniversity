@@ -42,6 +42,21 @@ print("------------------------TASK13------------------------------------")
 Algorithms.info_task13(population_task12)
 
 print("------------------------TASK14------------------------------------")
-tournament_route, tournament_fitness = Algorithms.tournament_task14(Algorithms.convert_dict_to_list(population_task12), 5)
+tournament_route1, tournament_fitness1 = Algorithms.tournament_task14(Algorithms.convert_dict_to_list(population_task12), 5)
 #Converting to list because info function accept list or dict
-Algorithms.info({tournament_route: tournament_fitness})
+
+print("Parent 1")
+Algorithms.info({tournament_route1: tournament_fitness1})
+
+tournament_route2, tournament_fitness2 = Algorithms.tournament_task14(Algorithms.convert_dict_to_list(population_task12), 5)
+
+while tournament_route1 == tournament_route2:
+    tournament_route2, tournament_fitness2 = Algorithms.tournament_task14(
+        Algorithms.convert_dict_to_list(population_task12), 5
+    )
+print("Parent 2")
+Algorithms.info({tournament_route2: tournament_fitness2})
+
+print("------------------------TASK15------------------------------------")
+crossover_route = Algorithms.PMX_alg(tournament_route1,tournament_route2)
+Algorithms.info({tuple(crossover_route): Algorithms.calculate_fitness(crossover_route)})

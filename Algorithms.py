@@ -1,4 +1,5 @@
 import random
+from operator import contains
 from random import sample
 from xmlrpc.client import MAXINT
 
@@ -174,3 +175,40 @@ class Algorithms:
     @staticmethod
     def convert_dict_to_list(routes_fitness):
         return list(routes_fitness.keys())
+
+    @staticmethod
+    def PMX_alg(route1, route2):
+        size = len(route1)
+        # randomly chosen segment
+        start = random.randint(0, size - 2)
+        end = random.randint(start + 1, size - 1)
+
+        child = [None] * size
+
+        # 1) copy segment from parent1
+        child[start:end] = route1[start:end]
+
+        # 2) FIlling positions from parent2
+        for i in range(size):
+            if child[i] is not None:
+                continue
+            #parent1 = [A, B, C, D, E, F, G, H]
+            #parent2 = [D, C, F, B, H, A, G, E]
+            #child = [None, None, C, D, E, None, None, None]
+            candidate = route2[i]
+
+            # if candidate already in child, then look replacement in parent2
+            while candidate in child:
+                j = route2.index(candidate)  # returns index of candidate в parent2
+                candidate = route1[j]  # taking city from parent1 in the same position
+
+
+            child[i] = candidate
+
+        return child
+
+
+
+
+
+
