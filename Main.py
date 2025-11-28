@@ -69,4 +69,10 @@ print("------------------------TASK17------------------------------------")
 population_list = Algorithms.convert_dict_to_list(population_task12)
 print([len(r) for r in population_list])
 population_list = [list(r) for r in Algorithms.convert_dict_to_list(population_task12)]
-epoch, best_three = Algorithms.epoch(population_list, 100)
+epoch1, best_results = Algorithms.epoch(population_list, 50000)
+print("Best 3 results")
+Algorithms.info(best_results[0])
+Algorithms.info(best_results[1])
+Algorithms.info(best_results[2])
+
+print(len(epoch1))

@@ -169,7 +169,6 @@ class Algorithms:
             if curr_fitness < best_fitness:
                 winner = route
                 best_fitness = curr_fitness
-
         return winner, best_fitness
 
     @staticmethod
@@ -233,20 +232,26 @@ class Algorithms:
     def epoch(initial_population, size):
         result = []
         best_three_solutions = []
-
+        print("------------------------- 1 SELECTING PARENTS ----------------------------")
         #-----------Selecting parents---------
         while len(result) != size:
             parent1, _ = Algorithms.tournament_task14(initial_population, 5)
             parent2, _ = Algorithms.tournament_task14(initial_population, 5)
-            while parent1 == parent2:
-                parent2 = Algorithms.tournament_task14(initial_population, 5)
+            while id(parent1) == id(parent2):
+                parent2, _ = Algorithms.tournament_task14(initial_population, 5)
                 parent2 = list(parent2)
+            print(
+                "Selected parents: \n" + str(Algorithms.info({tuple(parent1): Algorithms.calculate_fitness(parent1)})) +
+                "\n" +
+                str(Algorithms.info({tuple(parent2): Algorithms.calculate_fitness(parent2)})))
+            print("------------------------- 2 CROSSOVER PMX ----------------------------")
         #-----------Crossover---------
             parent1 = list(parent1)
             parent2 = list(parent2)
 
             child = Algorithms.PMX_alg(parent1, parent2)
-
+            print("PMX result" + str(Algorithms.info({tuple(child): Algorithms.calculate_fitness(child)})))
+            print("------------------------- 3 SWAP MUTATION ----------------------------")
         #-----------Mutation---------
             child = Algorithms.swap_mutation(child,0.2)
             child_fitness = Algorithms.calculate_fitness(child)
