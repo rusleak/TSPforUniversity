@@ -8,7 +8,8 @@ from Parser import Parser
 coordinates_berlin_11 = Parser.read_tsp_file("/Users/rusleak/Downloads/berlin11_modified.tsp")
 coordinates_berlin_52 = Parser.read_tsp_file("/Users/rusleak/Downloads/berlin52.tsp")
 
-random_route = Algorithms.generate_random_route(coordinates_berlin_11)
+current_file = coordinates_berlin_52
+random_route = Algorithms.generate_random_route(current_file)
 
 "------------------------TASK5------------------------------------"
 fitness = Algorithms.calculate_fitness(random_route)
@@ -20,22 +21,22 @@ Algorithms.info(greedy_result)
 
 
 print("------------------------TASK8------------------------------------")
-best_city, best_fit = Algorithms.best_greedy_starting_city(coordinates_berlin_11)
-print("Best starting city by greedy algorithm BERLIN11:", best_city, "fitness:", best_fit)
+best_city, best_fit = Algorithms.best_greedy_starting_city(current_file)
+print("Best starting city by greedy algorithm :", best_city, "fitness:", best_fit)
 
 
 print("------------------------TASK9------------------------------------")
-best_route_fitness, dict_of_routes_fitness = Algorithms.random_routes_analysis(coordinates_berlin_11, 100)
+best_route_fitness, dict_of_routes_fitness = Algorithms.random_routes_analysis(current_file, 100)
 
 print("------------------------TASK10------------------------------------")
-best_city, best_fit = Algorithms.best_greedy_starting_city(coordinates_berlin_52)
+best_city, best_fit = Algorithms.best_greedy_starting_city(current_file)
 print("Best starting city by greedy algorithm  BERLIN52:", best_city, "fitness:", best_fit)
 
-best_route_fitness, dict_of_routes_fitness = Algorithms.random_routes_analysis(coordinates_berlin_52, 100)
+best_route_fitness, dict_of_routes_fitness = Algorithms.random_routes_analysis(current_file, 100)
 Algorithms.info(best_route_fitness)
 
 print("------------------------TASK12------------------------------------")
-population_task12 = Algorithms.population_task12(coordinates_berlin_11,30,11)
+population_task12 = Algorithms.population_task12(current_file,3000,11)
 Algorithms.info(population_task12)
 
 print("------------------------TASK13------------------------------------")
@@ -76,3 +77,17 @@ Algorithms.info(best_results[1])
 Algorithms.info(best_results[2])
 
 print(len(epoch1))
+print("------------TASK18-------------")
+list_of_dict_best_solutions = [best_results]
+
+for x in range (0, 5):
+    epoch1, best_results = Algorithms.epoch(population_list, 50000)
+    list_of_dict_best_solutions.append(best_results)
+print("-------------Best results from loop----------------")
+#Information of best_results
+for item in list_of_dict_best_solutions:
+    if isinstance(item, list):               # это best_three_solutions
+        for route_dict in item:              # в нём 3 словаря
+            Algorithms.info(route_dict)
+    else:
+        Algorithms.info(item)
