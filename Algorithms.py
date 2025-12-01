@@ -232,7 +232,6 @@ class Algorithms:
     def epoch(initial_population, size):
         result = []
         best_three_solutions = []
-        print("------------------------- 1 SELECTING PARENTS ----------------------------")
         #-----------Selecting parents---------
         while len(result) != size:
             parent1, _ = Algorithms.tournament_task14(initial_population, 5)
@@ -240,10 +239,9 @@ class Algorithms:
             while id(parent1) == id(parent2):
                 parent2, _ = Algorithms.tournament_task14(initial_population, 5)
                 parent2 = list(parent2)
-            print(
-                "Selected parents: \n" + str(Algorithms.info({tuple(parent1): Algorithms.calculate_fitness(parent1)})) +
-                "\n" +
-                str(Algorithms.info({tuple(parent2): Algorithms.calculate_fitness(parent2)})))
+            print("------------------------- 1 SELECTING PARENTS ----------------------------")
+            Algorithms.info({tuple(parent1): Algorithms.calculate_fitness(parent1)})
+            Algorithms.info({tuple(parent2): Algorithms.calculate_fitness(parent2)})
             print("------------------------- 2 CROSSOVER PMX ----------------------------")
         #-----------Crossover---------
             parent1 = list(parent1)
