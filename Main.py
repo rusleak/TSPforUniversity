@@ -8,7 +8,7 @@ from Parser import Parser
 coordinates_berlin_11 = Parser.read_tsp_file("/Users/rusleak/Downloads/berlin11_modified.tsp")
 coordinates_berlin_52 = Parser.read_tsp_file("/Users/rusleak/Downloads/berlin52.tsp")
 
-current_file = coordinates_berlin_52
+current_file = coordinates_berlin_11
 random_route = Algorithms.generate_random_route(current_file)
 
 "------------------------TASK5------------------------------------"
@@ -36,7 +36,7 @@ best_route_fitness, dict_of_routes_fitness = Algorithms.random_routes_analysis(c
 Algorithms.info(best_route_fitness)
 
 print("------------------------TASK12------------------------------------")
-population_task12 = Algorithms.population_task12(current_file,3000,11)
+population_task12 = Algorithms.population_task12(current_file,100,11)
 Algorithms.info(population_task12)
 
 print("------------------------TASK13------------------------------------")
@@ -81,7 +81,7 @@ print("------------TASK18-------------")
 list_of_dict_best_solutions = [best_results]
 
 for x in range (0, 5):
-    epoch1, best_results = Algorithms.epoch(population_list, 50000)
+    epoch1, best_results = Algorithms.epoch(population_list, 1)
     list_of_dict_best_solutions.append(best_results)
 print("-------------Best results from loop----------------")
 #Information of best_results
@@ -91,3 +91,25 @@ for item in list_of_dict_best_solutions:
             Algorithms.info(route_dict)
     else:
         Algorithms.info(item)
+
+import matplotlib.pyplot as plt
+
+best_fitnesses = []
+for top3 in list_of_dict_best_solutions:
+    if isinstance(top3, list):
+        min_fit = min([list(d.values())[0] for d in top3])
+        best_fitnesses.append(min_fit)
+    else:
+        best_fitnesses.append(list(top3.values())[0])
+
+plt.plot(best_fitnesses, marker='o')
+plt.title("Graph")
+plt.xlabel("Attempt / Epoch")
+plt.ylabel("Best fitness")
+plt.grid()
+
+
+for i, fitness in enumerate(best_fitnesses):
+    plt.text(i, fitness, f"{fitness:.1f}", ha='center', va='bottom', fontsize=8)
+
+plt.show()
