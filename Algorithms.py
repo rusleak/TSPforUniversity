@@ -67,7 +67,7 @@ class Algorithms:
             result = Algorithms.greedy_algorithm(coordinates, city)
             path, fitness = list(result.items())[0]
 
-            Algorithms.info(result)
+            # Algorithms.info(result)
 
             if fitness < best_fitness:
                 best_fitness = fitness
@@ -92,8 +92,8 @@ class Algorithms:
             if len(best_route_map) == 0 or current_fitness < list(best_route_map.values())[0]:
                 best_route_map = {route_key: current_fitness}
 
-        print("ROUTES MAP")
-        Algorithms.info(routes_map)
+        # print("ROUTES MAP")
+        # Algorithms.info(routes_map)
 
         print("Best route by 100 randoms choice:")
         Algorithms.info(best_route_map)
@@ -121,7 +121,7 @@ class Algorithms:
             curr = Algorithms.greedy_algorithm(initial_data, city_to_start)
             result.update(curr)
 
-        while len(result) < population_sol + greedy_sol:
+        while len(result) < population_sol :
             curr = Algorithms.generate_random_route(initial_data)
             fitness = Algorithms.calculate_fitness(curr)
             result[tuple(curr)] = fitness
@@ -226,60 +226,143 @@ class Algorithms:
         return new_population
 
     @staticmethod
-    def swap_mutation(route, mutation_rate=0.02):
+    def inversion_mutation(route, mutation_rate=0.1):
+        # Если случайное число больше шанса мутации, ничего не делаем
         if random.random() > mutation_rate:
             return route
 
-        child = route.copy()
-        i, j = random.sample(range(len(child)), 2)
-        child[i], child[j] = child[j], child[i]
+        # ИСПРАВЛЕНИЕ ЗДЕСЬ:
+        # Вместо route.copy() используем list(route),
+        # так как route может прийти в виде кортежа (tuple)
+        child = list(route)
+
+        # Выбираем две случайные точки разрыва
+        idx1, idx2 = random.sample(range(len(child)), 2)
+
+        start = min(idx1, idx2)
+        end = max(idx1, idx2)
+
+        # Переворачиваем сегмент
+        child[start:end + 1] = child[start:end + 1][::-1]
+
         return child
 
     @staticmethod
-    def epoch(initial_population, size):
-        result = []
-        best_three_solutions = []
-        #-----------Selecting parents---------
-        while len(result) != size:
-            parent1, _ = Algorithms.tournament_task14(initial_population, 5)
-            parent2, _ = Algorithms.tournament_task14(initial_population, 5)
-            while id(parent1) == id(parent2):
-                parent2, _ = Algorithms.tournament_task14(initial_population, 5)
-                parent2 = list(parent2)
-            print("------------------------- 1 SELECTING PARENTS ----------------------------")
-            Algorithms.info({tuple(parent1): Algorithms.calculate_fitness(parent1)})
-            Algorithms.info({tuple(parent2): Algorithms.calculate_fitness(parent2)})
-            print("------------------------- 2 CROSSOVER PMX ----------------------------")
-        #-----------Crossover---------
-            parent1 = list(parent1)
-            parent2 = list(parent2)
+    def two_opt_optimize(route):
+        # ИСПРАВЛЕНИЕ: Превращаем входной маршрут в список,
+        # так как он может прийти в виде кортежа (tuple)
+        best_route = list(route)
 
-            child = Algorithms.PMX_alg(parent1, parent2)
-            print("PMX result")
-            Algorithms.info({tuple(child): Algorithms.calculate_fitness(child)})
-            print("------------------------- 3 SWAP MUTATION ----------------------------")
-        #-----------Mutation---------
-            child = Algorithms.swap_mutation(child,0.02)
-            child_fitness = Algorithms.calculate_fitness(child)
-        # -----------Creating population / best_solutions---------
-            result.append({tuple(child): child_fitness})
+        improved = True
+        count = 0
+        max_checks = 200
 
-            if len(best_three_solutions) < 3:
-                best_three_solutions.append({tuple(child): child_fitness})
-            else:
-                worst_route = None
-                worst_fitness = -1
+        while improved and count < max_checks:
+            improved = False
+            count += 1
+            for i in range(1, len(route) - 2):
+                for j in range(i + 1, len(route)):
+                    if j - i == 1: continue
 
-                # finding the worst element
-                for elem in best_three_solutions:  # elem = {route_tuple : fitness}
-                    for key, value in elem.items():  # key = route_tuple, value = fitness
-                        if value > worst_fitness:
-                            worst_fitness = value
-                            worst_route = elem  # tuple here
+                    new_route = best_route[:]
+                    # Теперь это сработает, так как best_route — это list
+                    new_route[i:j] = best_route[i:j][::-1]
 
+                    if Algorithms.calculate_fitness(new_route) < Algorithms.calculate_fitness(best_route):
+                        best_route = new_route
+                        improved = True
+                        break
+                if improved: break
+        return best_route
+    @staticmethod
+    def ordered_crossover(parent1, parent2):
+        size = len(parent1)
+        start, end = sorted(random.sample(range(size), 2))
 
-                if child_fitness < worst_fitness:
-                    best_three_solutions.remove(worst_route)
-                    best_three_solutions.append({tuple(child): child_fitness})
-        result = Algorithms.add_elite(best_three_solutions, result, 2)
-        return result, best_three_solutions
+        # Создаем ребенка с пустыми местами
+        child = [None] * size
+
+        # 1. Копируем сегмент от первого родителя
+        child[start:end + 1] = parent1[start:end + 1]
+
+        # 2. Заполняем оставшиеся места городами из второго родителя
+        # соблюдая их порядок, начиная ПОСЛЕ скопированного сегмента
+        p2_index = (end + 1) % size
+        c_index = (end + 1) % size
+
+        while None in child:
+            current_city = parent2[p2_index]
+
+            # Если города еще нет в ребенке, добавляем
+            if current_city not in child:
+                child[c_index] = current_city
+                c_index = (c_index + 1) % size
+
+            p2_index = (p2_index + 1) % size
+
+        return child
+
+    @staticmethod
+    def epoch(initial_population_list, size):
+        new_population = []
+
+        # --- ШАГ 1: СОРТИРОВКА (Исправленная) ---
+        temp_list = []
+        # Используем range(len(...)), чтобы получить индекс 'i'
+        for i in range(len(initial_population_list)):
+            route = initial_population_list[i]
+            fitness = Algorithms.calculate_fitness(route)
+
+            # ВАЖНОЕ ИСПРАВЛЕНИЕ:
+            # Мы добавляем 'i' (индекс) в середину.
+            # Теперь структура: [Длина, Уникальный Номер, Маршрут]
+            # Если длины равны, Python сравнит номера (они всегда разные)
+            # и не будет пытаться сравнивать сами маршруты, вызывая ошибку.
+            temp_list.append([fitness, i, route])
+
+        temp_list.sort()
+
+        # Вытаскиваем маршруты обратно
+        sorted_routes = []
+        for item in temp_list:
+            # Маршрут теперь лежит под индексом 2 (0-фитнес, 1-индекс, 2-маршрут)
+            route = item[2]
+            sorted_routes.append(route)
+
+        # --- ШАГ 2: ЭЛИТИЗМ ---
+        elite_count = 2
+        for i in range(elite_count):
+            elite_route = sorted_routes[i]
+            new_population.append(elite_route)
+
+        # --- ШАГ 3: СКРЕЩИВАНИЕ И МУТАЦИЯ ---
+        while len(new_population) < size:
+            # 1. Турнир (берем [0], так как метод возвращает (route, fit))
+            parent1 = Algorithms.tournament_task14(initial_population_list, 5)[0]
+            parent2 = Algorithms.tournament_task14(initial_population_list, 5)[0]
+
+            # 2. Скрещивание
+            child = Algorithms.ordered_crossover(list(parent1), list(parent2))
+
+            # 3. Мутация
+            child = Algorithms.inversion_mutation(child, mutation_rate=0.2)
+
+            new_population.append(child)
+
+        # --- ШАГ 4: 2-OPT ---
+        best_candidate = new_population[0]
+        optimized_best = Algorithms.two_opt_optimize(best_candidate)
+        new_population[0] = optimized_best
+
+        # --- ШАГ 5: РЕЗУЛЬТАТ ---
+        result_dicts = []
+        for route in new_population:
+            fit = Algorithms.calculate_fitness(route)
+            entry = {tuple(route): fit}
+            result_dicts.append(entry)
+
+        best_three = []
+        for i in range(3):
+            best_three.append(result_dicts[i])
+
+        return result_dicts, best_three

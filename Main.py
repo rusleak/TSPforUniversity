@@ -21,28 +21,20 @@ greedy_result = Algorithms.greedy_algorithm(random_route, random_route[0])
 Algorithms.info(greedy_result)
 
 
-print("------------------------TASK8------------------------------------")
+print("------------------------TASK 8 9 10------------------------------------")
 best_city, best_fit = Algorithms.best_greedy_starting_city(current_file)
 print("Best starting city by greedy algorithm :", best_city, "fitness:", best_fit)
-
-
-print("------------------------TASK9------------------------------------")
+#It has print inside method
 best_route_fitness, dict_of_routes_fitness = Algorithms.random_routes_analysis(current_file, 100)
 
-print("------------------------TASK10------------------------------------")
-best_city, best_fit = Algorithms.best_greedy_starting_city(current_file)
-print("Best starting city by greedy algorithm  BERLIN52:", best_city, "fitness:", best_fit)
-
-best_route_fitness, dict_of_routes_fitness = Algorithms.random_routes_analysis(current_file, 100)
-Algorithms.info(best_route_fitness)
 
 print("------------------------TASK12------------------------------------")
-population_task12 = Algorithms.population_task12(current_file,100,0)
-Algorithms.info(population_task12)
+population_task12 = Algorithms.population_task12(current_file,100,5)
+# Algorithms.info(population_task12)
 
 print("------------------------TASK13------------------------------------")
 Algorithms.info_task13(population_task12)
-
+#
 print("------------------------TASK14------------------------------------")
 tournament_route1, tournament_fitness1 = Algorithms.tournament_task14(Algorithms.convert_dict_to_list(population_task12), 15)
 #Converting to list because info function accept list or dict
@@ -64,61 +56,82 @@ crossover_route = Algorithms.PMX_alg(tournament_route1,tournament_route2)
 Algorithms.info({tuple(crossover_route): Algorithms.calculate_fitness(crossover_route)})
 
 print("------------------------TASK16------------------------------------")
-Algorithms.swap_mutation(crossover_route, 0.01)
+# Мы заменили swap_mutation на inversion_mutation в классе, поэтому вызываем новый метод
+# Для демонстрации ставим шанс 1.0 (всегда), чтобы увидеть результат
+mutated_route = Algorithms.inversion_mutation(crossover_route, 0.2)
+print("Mutated route (Inversion):")
+Algorithms.info({tuple(mutated_route): Algorithms.calculate_fitness(mutated_route)})
 
 print("------------------------TASK17------------------------------------")
 
-population_list = Algorithms.convert_dict_to_list(population_task12)
-print([len(r) for r in population_list])
+# Converting dict to list
 population_list = [list(r) for r in Algorithms.convert_dict_to_list(population_task12)]
-epoch1, best_results = Algorithms.epoch(population_list, 1000)
-print("Best 3 results")
-Algorithms.info(best_results[0])
-Algorithms.info(best_results[1])
-Algorithms.info(best_results[2])
+current_population_dicts, best_results_of_epoch = Algorithms.epoch(population_list, 100)
 
-print(len(epoch1))
+print("Best 3 results of Epoch 1:")
+Algorithms.info(best_results_of_epoch[0])
+Algorithms.info(best_results_of_epoch[1])
+Algorithms.info(best_results_of_epoch[2])
+
 print("------------TASK18-------------")
-# Initialize the history with the results from Task 17
-list_of_dict_best_solutions = [best_results]
+list_of_dict_best_solutions = [best_results_of_epoch]
+generations = 100
+mutation_rate = 0.2
 
-# Loop for 5 additional epochs
-for i in range(10):
-    # FIX: The previous 'epoch1' is a list of dictionaries: [{route: fitness}, ...]
-    # We must extract the routes (keys) to pass them as the population for the next epoch.
-    next_generation_population = [list(solution.keys())[0] for solution in epoch1]
+stagnation_counter = 0
+last_best_fitness = list(best_results_of_epoch[0].values())[0]
 
-    # Now pass the extracted routes (list of tuples/lists) to the function
-    epoch1, best_results = Algorithms.epoch(next_generation_population, 1000)
+for i in range(generations):
+    # 1. Извлекаем маршруты и СРАЗУ конвертируем их в списки (list)
+    next_gen_routes = [list(list(d.keys())[0]) for d in current_population_dicts]
 
-    list_of_dict_best_solutions.append(best_results)
-print("-------------Best results from loop----------------")
-#Information of best_results
-for item in list_of_dict_best_solutions:
-    if isinstance(item, list):
-        for route_dict in item:
-            Algorithms.info(route_dict)
+    # --- ДИНАМИЧЕСКАЯ МУТАЦИЯ (Kick) ---
+    if stagnation_counter > 5:
+        print(f"!!! STAGNATION DETECTED at gen {i}. KICKING POPULATION !!!")
+        # Берем маршруты с 5-го по 25-й и применяем сильную мутацию
+        for k in range(5, 25):
+            # Теперь next_gen_routes[k] это точно список, ошибки не будет
+            next_gen_routes[k] = Algorithms.inversion_mutation(next_gen_routes[k], mutation_rate=0.8)
+        stagnation_counter = 0
+
+    # 2. Запускаем новую эпоху
+    current_population_dicts, best_results_of_epoch = Algorithms.epoch(next_gen_routes, 100)
+    list_of_dict_best_solutions.append(best_results_of_epoch)
+
+    current_best_fitness = list(best_results_of_epoch[0].values())[0]
+
+    # Проверка на застревание
+    if abs(current_best_fitness - last_best_fitness) < 0.001:
+        stagnation_counter += 1
     else:
-        Algorithms.info(item)
+        stagnation_counter = 0
+        last_best_fitness = current_best_fitness
 
+    if i % 10 == 0:
+        print(f"Generation {i}: Best Fitness = {current_best_fitness:.2f}")
+
+print("-------------Final Best Result----------------")
+#Last list of dict and first dict in this list
+Algorithms.info(list_of_dict_best_solutions[-1][0])
+
+# ---------------- GRAPH ----------------
 import matplotlib.pyplot as plt
 
 best_fitnesses = []
 for top3 in list_of_dict_best_solutions:
-    if isinstance(top3, list):
-        min_fit = min([list(d.values())[0] for d in top3])
-        best_fitnesses.append(min_fit)
-    else:
-        best_fitnesses.append(list(top3.values())[0])
+    # top3 - это список из 3-х словарей. Берем первый (самый лучший, т.к. они отсортированы)
+    best_fit = list(top3[0].values())[0]
+    best_fitnesses.append(best_fit)
 
-plt.plot(best_fitnesses, marker='o')
-plt.title("Graph")
-plt.xlabel("Attempt / Epoch")
-plt.ylabel("Best fitness")
-plt.grid()
+plt.figure(figsize=(10, 6))
+plt.plot(best_fitnesses, marker='o', markersize=3)
+plt.title(f"Genetic Algorithm Progress ({len(best_fitnesses)} epochs)")
+plt.xlabel("Epoch")
+plt.ylabel("Best Fitness (Distance)")
+plt.grid(True)
 
-
-for i, fitness in enumerate(best_fitnesses):
-    plt.text(i, fitness, f"{fitness:.1f}", ha='center', va='bottom', fontsize=8)
+# Подписываем только начало и конец, чтобы не засорять график
+plt.text(0, best_fitnesses[0], f"{best_fitnesses[0]:.1f}", ha='right', va='bottom', color='red')
+plt.text(len(best_fitnesses) - 1, best_fitnesses[-1], f"{best_fitnesses[-1]:.1f}", ha='left', va='top', color='green')
 
 plt.show()
