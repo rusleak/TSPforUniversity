@@ -303,29 +303,20 @@ class Algorithms:
         return child
 
     @staticmethod
-    def epoch(initial_population_list, size):
+    # ДОБАВИЛИ mutation_rate в аргументы (по умолчанию 0.1)
+    def epoch(initial_population_list, size, mutation_rate=0.1):
         new_population = []
 
+        # ... (Код сортировки и элитизма остается ТЕМ ЖЕ) ...
         # --- ШАГ 1: СОРТИРОВКА (Исправленная) ---
         temp_list = []
-        # Используем range(len(...)), чтобы получить индекс 'i'
         for i in range(len(initial_population_list)):
             route = initial_population_list[i]
             fitness = Algorithms.calculate_fitness(route)
-
-            # ВАЖНОЕ ИСПРАВЛЕНИЕ:
-            # Мы добавляем 'i' (индекс) в середину.
-            # Теперь структура: [Длина, Уникальный Номер, Маршрут]
-            # Если длины равны, Python сравнит номера (они всегда разные)
-            # и не будет пытаться сравнивать сами маршруты, вызывая ошибку.
             temp_list.append([fitness, i, route])
-
         temp_list.sort()
-
-        # Вытаскиваем маршруты обратно
         sorted_routes = []
         for item in temp_list:
-            # Маршрут теперь лежит под индексом 2 (0-фитнес, 1-индекс, 2-маршрут)
             route = item[2]
             sorted_routes.append(route)
 
@@ -337,24 +328,21 @@ class Algorithms:
 
         # --- ШАГ 3: СКРЕЩИВАНИЕ И МУТАЦИЯ ---
         while len(new_population) < size:
-            # 1. Турнир (берем [0], так как метод возвращает (route, fit))
             parent1 = Algorithms.tournament_task14(initial_population_list, 5)[0]
             parent2 = Algorithms.tournament_task14(initial_population_list, 5)[0]
 
-            # 2. Скрещивание
             child = Algorithms.ordered_crossover(list(parent1), list(parent2))
 
-            # 3. Мутация
-            child = Algorithms.inversion_mutation(child, mutation_rate=0.2)
+            # ИСПОЛЬЗУЕМ ПЕРЕДАННЫЙ mutation_rate
+            child = Algorithms.inversion_mutation(child, mutation_rate=mutation_rate)
 
             new_population.append(child)
 
-        # --- ШАГ 4: 2-OPT ---
+        # ... (Остальной код с 2-opt и возвратом результата остается ТЕМ ЖЕ) ...
         best_candidate = new_population[0]
         optimized_best = Algorithms.two_opt_optimize(best_candidate)
         new_population[0] = optimized_best
 
-        # --- ШАГ 5: РЕЗУЛЬТАТ ---
         result_dicts = []
         for route in new_population:
             fit = Algorithms.calculate_fitness(route)
