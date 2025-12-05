@@ -7,8 +7,9 @@ from Parser import Parser
 "-------------------------TASK4-----------------------------------"
 coordinates_berlin_11 = Parser.read_tsp_file("/Users/rusleak/Downloads/berlin11_modified.tsp")
 coordinates_berlin_52 = Parser.read_tsp_file("/Users/rusleak/Downloads/berlin52.tsp")
+coordinates_berlin_100 = Parser.read_tsp_file("/Users/rusleak/Downloads/kroA150.tsp")
 
-current_file = coordinates_berlin_11
+current_file = coordinates_berlin_52
 random_route = Algorithms.generate_random_route(current_file)
 
 "------------------------TASK5------------------------------------"
@@ -36,24 +37,24 @@ best_route_fitness, dict_of_routes_fitness = Algorithms.random_routes_analysis(c
 Algorithms.info(best_route_fitness)
 
 print("------------------------TASK12------------------------------------")
-population_task12 = Algorithms.population_task12(current_file,100,11)
+population_task12 = Algorithms.population_task12(current_file,100,0)
 Algorithms.info(population_task12)
 
 print("------------------------TASK13------------------------------------")
 Algorithms.info_task13(population_task12)
 
 print("------------------------TASK14------------------------------------")
-tournament_route1, tournament_fitness1 = Algorithms.tournament_task14(Algorithms.convert_dict_to_list(population_task12), 5)
+tournament_route1, tournament_fitness1 = Algorithms.tournament_task14(Algorithms.convert_dict_to_list(population_task12), 15)
 #Converting to list because info function accept list or dict
 
 print("Parent 1")
 Algorithms.info({tournament_route1: tournament_fitness1})
 
-tournament_route2, tournament_fitness2 = Algorithms.tournament_task14(Algorithms.convert_dict_to_list(population_task12), 5)
+tournament_route2, tournament_fitness2 = Algorithms.tournament_task14(Algorithms.convert_dict_to_list(population_task12), 15)
 
 while tournament_route1 == tournament_route2:
     tournament_route2, tournament_fitness2 = Algorithms.tournament_task14(
-        Algorithms.convert_dict_to_list(population_task12), 5
+        Algorithms.convert_dict_to_list(population_task12), 15
     )
 print("Parent 2")
 Algorithms.info({tournament_route2: tournament_fitness2})
@@ -63,14 +64,14 @@ crossover_route = Algorithms.PMX_alg(tournament_route1,tournament_route2)
 Algorithms.info({tuple(crossover_route): Algorithms.calculate_fitness(crossover_route)})
 
 print("------------------------TASK16------------------------------------")
-Algorithms.swap_mutation(crossover_route, 0.2)
+Algorithms.swap_mutation(crossover_route, 0.01)
 
 print("------------------------TASK17------------------------------------")
 
 population_list = Algorithms.convert_dict_to_list(population_task12)
 print([len(r) for r in population_list])
 population_list = [list(r) for r in Algorithms.convert_dict_to_list(population_task12)]
-epoch1, best_results = Algorithms.epoch(population_list, 50000)
+epoch1, best_results = Algorithms.epoch(population_list, 1000)
 print("Best 3 results")
 Algorithms.info(best_results[0])
 Algorithms.info(best_results[1])
@@ -78,16 +79,24 @@ Algorithms.info(best_results[2])
 
 print(len(epoch1))
 print("------------TASK18-------------")
+# Initialize the history with the results from Task 17
 list_of_dict_best_solutions = [best_results]
 
-for x in range (0, 5):
-    epoch1, best_results = Algorithms.epoch(population_list, 1)
+# Loop for 5 additional epochs
+for i in range(10):
+    # FIX: The previous 'epoch1' is a list of dictionaries: [{route: fitness}, ...]
+    # We must extract the routes (keys) to pass them as the population for the next epoch.
+    next_generation_population = [list(solution.keys())[0] for solution in epoch1]
+
+    # Now pass the extracted routes (list of tuples/lists) to the function
+    epoch1, best_results = Algorithms.epoch(next_generation_population, 1000)
+
     list_of_dict_best_solutions.append(best_results)
 print("-------------Best results from loop----------------")
 #Information of best_results
 for item in list_of_dict_best_solutions:
-    if isinstance(item, list):               # это best_three_solutions
-        for route_dict in item:              # в нём 3 словаря
+    if isinstance(item, list):
+        for route_dict in item:
             Algorithms.info(route_dict)
     else:
         Algorithms.info(item)

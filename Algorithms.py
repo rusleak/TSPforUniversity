@@ -185,7 +185,7 @@ class Algorithms:
         child = [None] * size
 
         # 1) copy segment from parent1
-        child[start:end] = route1[start:end]
+        child[start:end+1] = route1[start:end+1]
 
         # 2) FIlling positions from parent2
         for i in range(size):
@@ -206,26 +206,33 @@ class Algorithms:
 
         return child
 
+    @staticmethod
+    def add_elite(old_best, new_population, elite_count):
+        """
+        old_best: list of dict {route_tuple : fitness}
+        new_population: list of dict {route_tuple : fitness}
+        elite_count: how much we need to insert
+        """
+
+        # if best < than needed add all of them
+        limit = elite_count
+        if len(old_best) < elite_count:
+            limit = len(old_best)
+
+        # adding
+        for i in range(limit):
+            new_population.append(old_best[i])
+
+        return new_population
 
     @staticmethod
-    def swap_mutation(route, mutation_rate=0.2):
+    def swap_mutation(route, mutation_rate=0.02):
+        if random.random() > mutation_rate:
+            return route
+
         child = route.copy()
-        print("Original route:")
-        Algorithms.info({tuple(route): Algorithms.calculate_fitness(route)})
-        size = len(child)
-
-        for i in range(size):
-            r = random.random()
-            print(f"City {child[i]} | random={r:.2f}", end=" -> ")
-            if r < mutation_rate:
-                j = random.randint(0, size - 1)
-                print(f"swapped with {child[j]}")
-                child[i], child[j] = child[j], child[i]
-            else:
-                print("no change")
-
-        print("Mutated route:")
-        Algorithms.info({tuple(child): Algorithms.calculate_fitness(child)})
+        i, j = random.sample(range(len(child)), 2)
+        child[i], child[j] = child[j], child[i]
         return child
 
     @staticmethod
@@ -248,10 +255,11 @@ class Algorithms:
             parent2 = list(parent2)
 
             child = Algorithms.PMX_alg(parent1, parent2)
-            print("PMX result" + str(Algorithms.info({tuple(child): Algorithms.calculate_fitness(child)})))
+            print("PMX result")
+            Algorithms.info({tuple(child): Algorithms.calculate_fitness(child)})
             print("------------------------- 3 SWAP MUTATION ----------------------------")
         #-----------Mutation---------
-            child = Algorithms.swap_mutation(child,0.2)
+            child = Algorithms.swap_mutation(child,0.02)
             child_fitness = Algorithms.calculate_fitness(child)
         # -----------Creating population / best_solutions---------
             result.append({tuple(child): child_fitness})
@@ -273,4 +281,5 @@ class Algorithms:
                 if child_fitness < worst_fitness:
                     best_three_solutions.remove(worst_route)
                     best_three_solutions.append({tuple(child): child_fitness})
+        result = Algorithms.add_elite(best_three_solutions, result, 2)
         return result, best_three_solutions
