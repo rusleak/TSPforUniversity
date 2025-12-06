@@ -91,7 +91,6 @@ class Algorithms:
             # updating
             if len(best_route_map) == 0 or current_fitness < list(best_route_map.values())[0]:
                 best_route_map = {route_key: current_fitness}
-
         # print("ROUTES MAP")
         # Algorithms.info(routes_map)
 

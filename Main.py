@@ -1,15 +1,16 @@
 import random
-from turtledemo.penrose import inflatedart
+
 
 from matplotlib import pyplot as plt
-
+import statistics
 from Algorithms import Algorithms
 from Parser import Parser
 
 "-------------------------TASK4-----------------------------------"
 coordinates_berlin_11 = Parser.read_tsp_file("/Users/rusleak/Downloads/berlin11_modified.tsp")
 coordinates_berlin_52 = Parser.read_tsp_file("/Users/rusleak/Downloads/berlin52.tsp")
-coordinates_berlin_100 = Parser.read_tsp_file("/Users/rusleak/Downloads/kroA150.tsp")
+coordinates_berlin_100 = Parser.read_tsp_file("/Users/rusleak/Downloads/kro100A.tsp")
+coordinates_berlin_150 = Parser.read_tsp_file("/Users/rusleak/Downloads/kroA150.tsp")
 
 current_file = coordinates_berlin_52
 random_route = Algorithms.generate_random_route(current_file)
@@ -137,81 +138,191 @@ plt.grid(True)
 # plt.show() # Можно закомментировать, чтобы показать оба графика в конце
 
 
-print("\n------------------------TASK 20: Comparing Parameters----------------")
-# Мы будем сравнивать влияние РАЗМЕРА ПОПУЛЯЦИИ на качество решения.
-# Запустим алгоритм 3 раза: для 50, 100 и 200 особей.
+# ---------------------------------------------------------
+# INSERT THIS AT THE END OF YOUR SCRIPT (REPLACING TASK 20)
+# ---------------------------------------------------------
 
-parameters_to_test = [50, 100, 200]
-comparison_histories = {}  # Словарь для хранения историй всех прогонов
+def run_experiment(coordinates, pop_size, mut_rate, generations=100, seed_val=42):
+    """
+    Runs the GA with specific parameters and returns the history of best fitnesses.
+    """
+    # 1. Set seed for fairness (so every test starts with same random conditions)
+    random.seed(seed_val)
 
-for pop_size in parameters_to_test:
-    print(f"Testing Population Size: {pop_size}...")
+    # 2. Initialize
+    # We use 5 greedy solutions, rest are random
+    greedy_count = 5
+    if pop_size <= 5: greedy_count = 1
 
-    # 1. Создаем начальную популяцию нужного размера
-    pop_task20 = Algorithms.population_task12(current_file, pop_size, 5)
+    pop_dict = Algorithms.population_task12(coordinates, pop_size, greedy_count)
+    pop_list = [list(r) for r in Algorithms.convert_dict_to_list(pop_dict)]
 
-    # 2. Конвертация
-    pop_list_20 = [list(r) for r in Algorithms.convert_dict_to_list(pop_task20)]
+    history = []
 
-    # 3. Первая эпоха
-    curr_pop_dicts_20, best_res_20 = Algorithms.epoch(pop_list_20, pop_size)
+    # Initial best
+    current_dicts, best_res = Algorithms.epoch(pop_list, pop_size, mutation_rate=mut_rate)
+    best_fit = list(best_res[0].values())[0]
+    history.append(best_fit)
 
-    # История для графика
-    history_20 = []
-    first_fit_20 = list(best_res_20[0].values())[0]
-    history_20.append(first_fit_20)
+    stagnation = 0
+    last_best = best_fit
 
-    # Переменные цикла
-    gens_20 = 100
-    stag_20 = 0
-    last_fit_20 = first_fit_20
+    for i in range(generations):
+        # Prepare list for next epoch
+        next_routes = [list(list(d.keys())[0]) for d in current_dicts]
 
-    # 4. Цикл эволюции
-    for i in range(gens_20):
-        next_routes_20 = [list(list(d.keys())[0]) for d in curr_pop_dicts_20]
+        # --- Stagnation Kick Logic ---
+        if stagnation > 10:  # If stuck for 10 gens
+            # Mutate 30% of population heavily
+            kick_size = int(pop_size * 0.3)
+            indices = random.sample(range(2, len(next_routes)), kick_size)
+            for k in indices:
+                # Strong mutation to break stagnation
+                next_routes[k] = Algorithms.inversion_mutation(next_routes[k], mutation_rate=0.8)
+            stagnation = 0
 
-        # --- Kick (Динамический диапазон СЛУЧАЙНЫЙ) ---
-        if stag_20 > 5:
-            # Рассчитываем, сколько особей мутировать (25% от популяции)
-            num_to_kick = int(pop_size * 0.25)
+        # Run Epoch
+        current_dicts, best_res = Algorithms.epoch(next_routes, pop_size, mutation_rate=mut_rate)
 
-            # Берем случайные индексы, исключая элиту (0, 1)
-            # range(2, len) - это пул доступных индексов
-            indices_to_kick = random.sample(range(2, len(next_routes_20)), num_to_kick)
+        current_best = list(best_res[0].values())[0]
+        history.append(current_best)
 
-            for k in indices_to_kick:
-                next_routes_20[k] = Algorithms.inversion_mutation(next_routes_20[k], 0.8)
-
-            stag_20 = 0
-
-        # Запуск Эпохи
-        curr_pop_dicts_20, best_res_20 = Algorithms.epoch(next_routes_20, pop_size)
-
-        # Запись результата
-        curr_fit_20 = list(best_res_20[0].values())[0]
-        history_20.append(curr_fit_20)
-
-        # Проверка застоя
-        if abs(curr_fit_20 - last_fit_20) < 0.001:
-            stag_20 += 1
+        if abs(current_best - last_best) < 0.001:
+            stagnation += 1
         else:
-            stag_20 = 0
-            last_fit_20 = curr_fit_20
+            stagnation = 0
+            last_best = current_best
 
-    # Сохраняем историю
-    comparison_histories[pop_size] = history_20
-    print(f"Finished Size {pop_size}. Best Result: {history_20[-1]:.2f}")
+    return history
 
-# --- ГРАФИК СРАВНЕНИЯ (Task 19/20) ---
-plt.figure(figsize=(12, 7))
 
-# Рисуем линию для каждого размера популяции
-for size, history in comparison_histories.items():
-    plt.plot(history, label=f"Pop Size {size} (Best: {history[-1]:.0f})")
+print("\n--- RUNNING PART 2 EXPERIMENTS ---")
+coords = current_file  # Make sure this is set to berlin52 or kroA150
 
-plt.title("Comparison of Different Initial Parameters (Population Size)")
-plt.xlabel("Epoch")
+# --- EXPERIMENT 1: POPULATION SIZE ---
+print("Testing Population Sizes...")
+pop_sizes = [50, 100, 200]
+results_pop = {}
+
+for p in pop_sizes:
+    # Fixed mutation 0.1, variable population
+    hist = run_experiment(coords, pop_size=p, mut_rate=0.1, generations=150, seed_val=10)
+    results_pop[p] = hist
+    print(f"Pop {p} finished. Best: {hist[-1]:.2f}")
+
+plt.figure(figsize=(10, 6))
+for p, h in results_pop.items():
+    plt.plot(h, label=f"Pop Size {p} (Best: {h[-1]:.0f})")
+plt.title("Impact of Population Size (Mutation=0.1)")
+plt.xlabel("Generation")
 plt.ylabel("Distance")
-plt.legend()  # Показывает легенду (какой цвет что значит)
+plt.legend()
 plt.grid(True)
 plt.show()
+
+# --- EXPERIMENT 2: MUTATION RATE ---
+print("\nTesting Mutation Rates...")
+mut_rates = [0.01, 0.2, 0.5]
+results_mut = {}
+
+for m in mut_rates:
+    # Fixed population 100, variable mutation
+    hist = run_experiment(coords, pop_size=100, mut_rate=m, generations=150, seed_val=10)
+    results_mut[m] = hist
+    print(f"Mut {m} finished. Best: {hist[-1]:.2f}")
+
+plt.figure(figsize=(10, 6))
+for m, h in results_mut.items():
+    plt.plot(h, label=f"Mutation {m} (Best: {h[-1]:.0f})")
+plt.title("Impact of Mutation Rate (PopSize=100)")
+plt.xlabel("Generation")
+plt.ylabel("Distance")
+plt.legend()
+plt.grid(True)
+plt.show()
+
+
+def run_part3_comparison(coordinates):
+    print("\n" + "=" * 50)
+    print("STARTING PART 3: COMPARISON ANALYSIS")
+    print("=" * 50)
+
+    # --- 1. RANDOM SEARCH (1000 runs) ---
+    print("\n[1/3] Running Random Search (1000 iterations)...")
+    random_results = []
+    for _ in range(1000):
+        r = Algorithms.generate_random_route(coordinates)
+        fit = Algorithms.calculate_fitness(r)
+        random_results.append(fit)
+
+    rand_best = min(random_results)
+    rand_mean = statistics.mean(random_results)
+    rand_stdev = statistics.stdev(random_results)
+    rand_var = statistics.variance(random_results)
+
+    print(f"Random Search Done.")
+    print(f"Best: {rand_best:.2f} | Mean: {rand_mean:.2f} | StDev: {rand_stdev:.2f}")
+
+    # --- 2. GREEDY ALGORITHM (All cities as start) ---
+    print("\n[2/3] Running Greedy Algorithm (for every city)...")
+    greedy_results = []
+
+    # Run greedy starting from EACH city in the list
+    for start_city in coordinates:
+        res = Algorithms.greedy_algorithm(coordinates, start_city)
+        fit = list(res.values())[0]
+        greedy_results.append(fit)
+
+    greedy_results.sort()  # Sort to find best easily
+
+    greedy_best_5 = greedy_results[:5]
+    greedy_mean = statistics.mean(greedy_results)
+    greedy_stdev = statistics.stdev(greedy_results)
+    greedy_var = statistics.variance(greedy_results)
+
+    print(f"Greedy Done.")
+    print(f"Best 5: {[round(x, 2) for x in greedy_best_5]}")
+    print(f"Mean: {greedy_mean:.2f} | StDev: {greedy_stdev:.2f}")
+
+    # --- 3. GENETIC ALGORITHM (10 runs with best parameters) ---
+    print("\n[3/3] Running Genetic Algorithm (10 runs)...")
+    # Parameters from Part 2 results
+    pop_size = 100
+    mut_rate = 0.2
+    generations = 100
+
+    ga_results = []
+
+    for i in range(10):
+        # Using a distinct seed for each run to get variation
+        run_seed = i * 50
+
+        # We reuse the logic from run_experiment but only need the final value
+        # Silent run (no plotting inside loop)
+        history = run_experiment(coordinates, pop_size, mut_rate, generations, seed_val=run_seed)
+        final_fit = history[-1]
+
+        ga_results.append(final_fit)
+        print(f"  -> Run {i + 1}/10 finished. Result: {final_fit:.2f}")
+
+    ga_best = min(ga_results)
+    ga_mean = statistics.mean(ga_results)
+    ga_stdev = statistics.stdev(ga_results)
+    ga_var = statistics.variance(ga_results)
+
+    # --- PRINTING FINAL TABLE FOR REPORT ---
+    print("\n" + "=" * 60)
+    print(f"{'METRIC':<20} | {'RANDOM (1000)':<15} | {'GREEDY (All)':<15} | {'GA (10 runs)':<15}")
+    print("-" * 60)
+    print(f"{'Best Result':<20} | {rand_best:<15.2f} | {greedy_results[0]:<15.2f} | {ga_best:<15.2f}")
+    print(f"{'Average (Mean)':<20} | {rand_mean:<15.2f} | {greedy_mean:<15.2f} | {ga_mean:<15.2f}")
+    print(f"{'Standard Deviation':<20} | {rand_stdev:<15.2f} | {greedy_stdev:<15.2f} | {ga_stdev:<15.2f}")
+    print(f"{'Variance':<20} | {rand_var:<15.2f} | {greedy_var:<15.2f} | {ga_var:<15.2f}")
+    print("=" * 60)
+
+    print("\nGreedy Best 5 Results:", [round(x, 2) for x in greedy_best_5])
+    print("GA All 10 Results:    ", [round(x, 2) for x in ga_results])
+
+
+# Execute Part 3
+run_part3_comparison(current_file)
