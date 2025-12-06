@@ -1,8 +1,4 @@
 import random
-from operator import contains
-from random import sample
-from xmlrpc.client import MAXINT
-
 
 class Algorithms:
 
@@ -226,30 +222,27 @@ class Algorithms:
 
     @staticmethod
     def inversion_mutation(route, mutation_rate=0.1):
-        # Если случайное число больше шанса мутации, ничего не делаем
+
         if random.random() > mutation_rate:
             return route
 
-        # ИСПРАВЛЕНИЕ ЗДЕСЬ:
-        # Вместо route.copy() используем list(route),
-        # так как route может прийти в виде кортежа (tuple)
+        # converting to list bcs it can be passed as tuple
         child = list(route)
 
-        # Выбираем две случайные точки разрыва
+        # 2 random indexes
         idx1, idx2 = random.sample(range(len(child)), 2)
 
         start = min(idx1, idx2)
         end = max(idx1, idx2)
 
-        # Переворачиваем сегмент
+        # Reverse the segment
         child[start:end + 1] = child[start:end + 1][::-1]
 
         return child
 
     @staticmethod
     def two_opt_optimize(route):
-        # ИСПРАВЛЕНИЕ: Превращаем входной маршрут в список,
-        # так как он может прийти в виде кортежа (tuple)
+        # converting to list bcs it can be passed as dict
         best_route = list(route)
 
         improved = True
@@ -264,7 +257,7 @@ class Algorithms:
                     if j - i == 1: continue
 
                     new_route = best_route[:]
-                    # Теперь это сработает, так как best_route — это list
+                    # now it works like that :  best_route — is list
                     new_route[i:j] = best_route[i:j][::-1]
 
                     if Algorithms.calculate_fitness(new_route) < Algorithms.calculate_fitness(best_route):
@@ -278,21 +271,20 @@ class Algorithms:
         size = len(parent1)
         start, end = sorted(random.sample(range(size), 2))
 
-        # Создаем ребенка с пустыми местами
         child = [None] * size
 
-        # 1. Копируем сегмент от первого родителя
+        # 1. Copy segment from 1rst parent
         child[start:end + 1] = parent1[start:end + 1]
 
-        # 2. Заполняем оставшиеся места городами из второго родителя
-        # соблюдая их порядок, начиная ПОСЛЕ скопированного сегмента
+        # 2. Filling left places with second parent
+        # following rules after first segment
         p2_index = (end + 1) % size
         c_index = (end + 1) % size
 
         while None in child:
             current_city = parent2[p2_index]
 
-            # Если города еще нет в ребенке, добавляем
+            # if city is not in child then add
             if current_city not in child:
                 child[c_index] = current_city
                 c_index = (c_index + 1) % size
@@ -302,12 +294,11 @@ class Algorithms:
         return child
 
     @staticmethod
-    # ДОБАВИЛИ mutation_rate в аргументы (по умолчанию 0.1)
     def epoch(initial_population_list, size, mutation_rate=0.1):
         new_population = []
 
-        # ... (Код сортировки и элитизма остается ТЕМ ЖЕ) ...
-        # --- ШАГ 1: СОРТИРОВКА (Исправленная) ---
+
+        # --- step 1: sorting
         temp_list = []
         for i in range(len(initial_population_list)):
             route = initial_population_list[i]
@@ -319,25 +310,24 @@ class Algorithms:
             route = item[2]
             sorted_routes.append(route)
 
-        # --- ШАГ 2: ЭЛИТИЗМ ---
+        # --- step 2: elite ---
         elite_count = 2
         for i in range(elite_count):
             elite_route = sorted_routes[i]
             new_population.append(elite_route)
 
-        # --- ШАГ 3: СКРЕЩИВАНИЕ И МУТАЦИЯ ---
+        # --- step 3: crossover and mutation ---
         while len(new_population) < size:
             parent1 = Algorithms.tournament_task14(initial_population_list, 5)[0]
             parent2 = Algorithms.tournament_task14(initial_population_list, 5)[0]
 
             child = Algorithms.ordered_crossover(list(parent1), list(parent2))
 
-            # ИСПОЛЬЗУЕМ ПЕРЕДАННЫЙ mutation_rate
             child = Algorithms.inversion_mutation(child, mutation_rate=mutation_rate)
 
             new_population.append(child)
 
-        # ... (Остальной код с 2-opt и возвратом результата остается ТЕМ ЖЕ) ...
+        # 2-opt
         best_candidate = new_population[0]
         optimized_best = Algorithms.two_opt_optimize(best_candidate)
         new_population[0] = optimized_best

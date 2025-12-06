@@ -1,6 +1,4 @@
 import random
-
-
 from matplotlib import pyplot as plt
 import statistics
 from Algorithms import Algorithms
@@ -59,8 +57,6 @@ crossover_route = Algorithms.PMX_alg(tournament_route1,tournament_route2)
 Algorithms.info({tuple(crossover_route): Algorithms.calculate_fitness(crossover_route)})
 
 print("------------------------TASK16------------------------------------")
-# Мы заменили swap_mutation на inversion_mutation в классе, поэтому вызываем новый метод
-# Для демонстрации ставим шанс 1.0 (всегда), чтобы увидеть результат
 mutated_route = Algorithms.inversion_mutation(crossover_route, 0.2)
 print("Mutated route (Inversion):")
 Algorithms.info({tuple(mutated_route): Algorithms.calculate_fitness(mutated_route)})
@@ -85,30 +81,30 @@ stagnation_counter = 0
 last_best_fitness = list(best_results_of_epoch[0].values())[0]
 
 for i in range(generations):
-    # 1. Извлекаем маршруты и СРАЗУ конвертируем их в списки (list)
+    # 1. Converting routes to lists (list)
     next_gen_routes = [list(list(d.keys())[0]) for d in current_population_dicts]
 
-    # --- ДИНАМИЧЕСКАЯ МУТАЦИЯ (Kick) ---
+    # --- Dynamic mutation (Kick) ---
     if stagnation_counter > 5:
         print(f"!!! STAGNATION DETECTED at gen {i}. KICKING POPULATION (RANDOM) !!!")
 
-        # ИЗМЕНЕНИЕ: Выбираем 20 СЛУЧАЙНЫХ индексов
-        # range(2, 100) означает, что мы берем индексы от 2 до 99 (не трогаем элиту 0 и 1)
+        # 20 random indexes
+        # range(2, 100) we choose indexes from 2 to 99 (not touching elite 0 and 1)
         indices_to_kick = random.sample(range(2, len(next_gen_routes)), 20)
 
         for k in indices_to_kick:
-            # Мутируем выбранных счастливчиков
+            # Mutating tthem
             next_gen_routes[k] = Algorithms.inversion_mutation(next_gen_routes[k], mutation_rate=0.8)
 
         stagnation_counter = 0
 
-    # 2. Запускаем новую эпоху
+    # 2. new epoch launch
     current_population_dicts, best_results_of_epoch = Algorithms.epoch(next_gen_routes, 100)
     list_of_dict_best_solutions.append(best_results_of_epoch)
 
     current_best_fitness = list(best_results_of_epoch[0].values())[0]
 
-    # Проверка на застревание
+    # checking for stagnation
     if abs(current_best_fitness - last_best_fitness) < 0.001:
         stagnation_counter += 1
     else:
@@ -123,7 +119,7 @@ print("-------------Final Best Result----------------")
 Algorithms.info(list_of_dict_best_solutions[-1][0])
 
 # ---------------- GRAPH ----------------
-# Тут рисуется график для Task 18
+# Graph for task 18
 best_fitnesses = []
 for top3 in list_of_dict_best_solutions:
     best_fit = list(top3[0].values())[0]
@@ -135,12 +131,12 @@ plt.title(f"Genetic Algorithm Progress ({len(best_fitnesses)} epochs)")
 plt.xlabel("Epoch")
 plt.ylabel("Best Fitness (Distance)")
 plt.grid(True)
-# plt.show() # Можно закомментировать, чтобы показать оба графика в конце
+# plt.show()
 
 
-# ---------------------------------------------------------
-# INSERT THIS AT THE END OF YOUR SCRIPT (REPLACING TASK 20)
-# ---------------------------------------------------------
+
+# Task 20...
+
 
 def run_experiment(coordinates, pop_size, mut_rate, generations=100, seed_val=42):
     """
@@ -197,7 +193,7 @@ def run_experiment(coordinates, pop_size, mut_rate, generations=100, seed_val=42
 
 
 print("\n--- RUNNING PART 2 EXPERIMENTS ---")
-coords = current_file  # Make sure this is set to berlin52 or kroA150
+coords = current_file
 
 # --- EXPERIMENT 1: POPULATION SIZE ---
 print("Testing Population Sizes...")
