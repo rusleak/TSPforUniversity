@@ -6,13 +6,13 @@ pymysql.install_as_MySQLdb()
 
 
 app = Flask(__name__)
-
+passwordb = "pass"
 
 def select_all_users():
     db = pymysql.connect(
         host="localhost",
         user="rusleak",
-        passwd="pass",
+        passwd=passwordb,
         db="interdb"
     )
     cur = db.cursor()
@@ -25,7 +25,36 @@ def select_all_users():
     return users
 
 
-# Вывод
+def register_user(username, password):
+    db = pymysql.connect(
+        host="localhost",
+        user="rusleak",
+        passwd=passwordb,
+        db="interdb"
+    )
+    cur = db.cursor()
+
+    # Проверка на дубликат сразу через SQL
+    cur.execute("SELECT * FROM user WHERE email=%s", (username,))
+    user = cur.fetchone()
+    if user:
+        db.close()
+        return "User already exists"
+
+    # Хешируем пароль
+    password_hash = bcrypt.hashpw(password.encode(), bcrypt.gensalt()).decode()
+
+    cur.execute(
+        "INSERT INTO user (email, password, role) VALUES (%s, %s, %s)",
+        (username, password_hash, 'USER')
+    )
+
+    db.commit()
+    db.close()
+    return "OK"
+
+
+# Show all
 all_users = select_all_users()
 for user in all_users:
     print(user)
@@ -57,6 +86,22 @@ def login():
         return f"Login success: {username}"
     else:
         return render_template('login.html', error="Wrong password")
+
+
+@app.route('/register', methods=['GET', 'POST'])
+def register():
+    if request.method == 'GET':
+        return render_template('register.html')
+
+    username = request.form['username']
+    password = request.form['password']
+
+    result = register_user(username, password)
+
+    if result == "User already exists":
+        return render_template('register.html', error="User already exists")
+
+    return render_template('register.html', success="User registered successfully")
 
 
 if __name__ == '__main__':
