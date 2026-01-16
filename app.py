@@ -77,7 +77,7 @@ def login():
     # ищем пользователя
     for user in all_users:
         if username == user[1]:
-            pass_from_bd = user[3]
+            pass_from_bd = user[2]
             break
 
     if pass_from_bd is None:
