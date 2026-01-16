@@ -2,10 +2,13 @@ from types import MethodType
 import bcrypt
 from flask import Flask, render_template, request
 import pymysql
+from flask import session, redirect, url_for
+
 pymysql.install_as_MySQLdb()
 
 
 app = Flask(__name__)
+app.secret_key = "very_secret_key"  # needed for sessions (simple demo key)
 passwordb = "pass"
 
 def select_all_users():
@@ -74,7 +77,7 @@ def login():
     # ищем пользователя
     for user in all_users:
         if username == user[1]:
-            pass_from_bd = user[3]
+            pass_from_bd = user[2]
             break
 
     if pass_from_bd is None:
@@ -83,7 +86,8 @@ def login():
 
 
     if bcrypt.checkpw(password.encode(), pass_from_bd.encode()):
-        return f"Login success: {username}"
+        session['username'] = username   # remember who is logged in
+        return redirect(url_for('myprofile'))
     else:
         return render_template('login.html', error="Wrong password")
 
@@ -102,6 +106,35 @@ def register():
         return render_template('register.html', error="User already exists")
 
     return render_template('register.html', success="User registered successfully")
+
+
+@app.route('/myprofile')
+def myprofile():
+    # If not logged in: go to login page
+    if 'username' not in session:
+        return redirect(url_for('login'))
+
+    username = session['username']
+
+    # Get user info from database
+    db = pymysql.connect(
+        host="localhost",
+        user="rusleak",
+        passwd=passwordb,
+        db="interdb"
+    )
+    cur = db.cursor()
+    cur.execute("SELECT email, role FROM user WHERE email=%s", (username,))
+    user = cur.fetchone()
+    db.close()
+
+    return render_template("myprofile.html", user=user)
+    
+
+@app.route('/logout')
+def logout():
+    session.clear()
+    return redirect(url_for('login'))
 
 
 if __name__ == '__main__':
