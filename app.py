@@ -2,10 +2,13 @@ from types import MethodType
 import bcrypt
 from flask import Flask, render_template, request
 import pymysql
+from flask import session, redirect, url_for
+
 pymysql.install_as_MySQLdb()
 
 
 app = Flask(__name__)
+app.secret_key = "very_secret_key"  # needed for sessions (simple demo key)
 passwordb = "pass"
 
 def select_all_users():
