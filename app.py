@@ -86,7 +86,8 @@ def login():
 
 
     if bcrypt.checkpw(password.encode(), pass_from_bd.encode()):
-        return f"Login success: {username}"
+        session['username'] = username   # remember who is logged in
+        return redirect(url_for('myprofile'))
     else:
         return render_template('login.html', error="Wrong password")
 
@@ -105,6 +106,35 @@ def register():
         return render_template('register.html', error="User already exists")
 
     return render_template('register.html', success="User registered successfully")
+
+
+@app.route('/myprofile')
+def myprofile():
+    # If not logged in: go to login page
+    if 'username' not in session:
+        return redirect(url_for('login'))
+
+    username = session['username']
+
+    # Get user info from database
+    db = pymysql.connect(
+        host="localhost",
+        user="rusleak",
+        passwd=passwordb,
+        db="interdb"
+    )
+    cur = db.cursor()
+    cur.execute("SELECT email, role FROM user WHERE email=%s", (username,))
+    user = cur.fetchone()
+    db.close()
+
+    return render_template("myprofile.html", user=user)
+    
+
+@app.route('/logout')
+def logout():
+    session.clear()
+    return redirect(url_for('login'))
 
 
 if __name__ == '__main__':
